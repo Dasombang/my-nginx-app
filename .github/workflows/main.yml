@@ -5,9 +5,9 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # [CI 단계] 도커 이미지를 빌드하고 도커 허브로 푸시합니다.
   build-and-push:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -25,3 +25,30 @@ jobs:
         file: ./Dockerfile
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-nginx-app:latest
+
+  # 🚀 [CD 테스트 단계] 외부 서버 없이, 깃허브 가상 컴퓨터 자체를 '배포 서버'로 사용합니다.
+  deploy-test:
+    needs: build-and-push # 무조건 빌드가 성공해야만 배포 테스트를 시작합니다.
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Run Docker Container & Test
+      run: |
+        echo "==== 1. 도커 허브에서 방금 빌드된 따끈따끈한 최신 이미지 다운로드 ===="
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/my-nginx-app:latest
+        
+        echo "==== 2. 가상 컴퓨터 내부 환경에 도커 컨테이너 실행 (80포트 연결) ===="
+        docker run -d -p 80:80 --name my-nginx-container ${{ secrets.DOCKERHUB_USERNAME }}/my-nginx-app:latest
+        
+        echo "==== 3. 컨테이너가 정상적으로 켜졌는지 실시간 프로세스(ps) 확인 ===="
+        docker ps
+        
+        echo "==== 4. Nginx 웹서버가 살아있는지 가상으로 접속(Curl)해 보기 ===="
+        sleep 3
+        curl -I http://localhost
