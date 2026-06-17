@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx-deployment
+  namespace: mynginx # 사용자님의 기존 네임스페이스 지정
+spec:
+  replicas: 2 # 컨테이너를 동시에 2대 띄웁니다.
+  selector:
+    matchLabels:
+      app: my-nginx
+  template:
+    metadata:
+      labels:
+        app: my-nginx
+    spec:
+      containers:
+      - name: nginx
+        image: dasombang/my-nginx-app:latest # 도커 허브의 내 이미지
+        ports:
+        - containerPort: 80
