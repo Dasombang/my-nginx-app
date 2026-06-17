@@ -4,7 +4,7 @@ metadata:
   name: my-nginx-deployment
   namespace: mynginx # 사용자님의 기존 네임스페이스 지정
 spec:
-  replicas: 2 # 컨테이너를 동시에 2대 띄웁니다.
+  replicas: 3 # 컨테이너를 동시에 2대 띄웁니다.
   selector:
     matchLabels:
       app: my-nginx
